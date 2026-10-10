@@ -270,7 +270,7 @@ html{scroll-behavior:smooth}
 
 <section id="data">
   <h2>Data sync</h2>
-  <p class="sub">One sync engine, two profiles, either direction. Eliyahu runs every sync with the <code>/data-sync</code> skill.</p>
+  <p class="sub">One sync engine, two profiles, either direction, run with the <code>/data-sync</code> skill. Each side writes only to its own database: the source side exports a package, and the target side’s owner reviews and applies it. Eliyahu applies into MAIN; Matania applies into LAB.</p>
 
   <h3>Sync profiles</h3>
   <div class="tablewrap"><table>
@@ -336,7 +336,7 @@ html{scroll-behavior:smooth}
 
 <section id="window">
   <h2>Maintenance window</h2>
-  <p class="sub">Eliyahu runs every sync with <code>/data-sync</code>, on demand, after business hours, with a limit of 60 minutes. Only the target, the environment receiving data, goes down. The source stays up because the export reads a consistent snapshot. A sync into MAIN takes its window on MAIN.</p>
+  <p class="sub">Syncs run on demand with <code>/data-sync</code>, after business hours, with a limit of 60 minutes. The target’s owner runs the window: Eliyahu for MAIN, Matania for LAB. Only the target goes down. The source stays up because the export reads a consistent snapshot. A sync into MAIN takes its window on MAIN.</p>
   <ol class="window">
     <li><b>Dry run, the day before</b><span>Export from the source, generate the plan and conflict report, resolve conflicts, and freeze the plan. Both apps stay up.</span></li>
     <li><b>Announce the window</b><span>Message employees with the time and expected length (up to 60 minutes, after business hours).</span></li>
@@ -373,10 +373,10 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
 
 <section id="eliyahu">
   <h2>Eliyahu’s tasks · MAIN</h2>
-  <p class="sub">10 of 16 done. MAIN is ready for LAB. Items marked Ready can start now; the rest wait on Matania or on LAB being live.</p>
+  <p class="sub">13 of 16 done. MAIN is ready for LAB. Items marked Ready can start now; the rest wait on Matania or on LAB being live.</p>
   <div class="tasks">
     <div class="side eli">
-      <header><h3>MAIN · app.lahatj.com</h3><span class="progress">10 / 16 done</span></header>
+      <header><h3>MAIN · app.lahatj.com</h3><span class="progress">13 / 16 done</span></header>
       <div class="phase"><h4>Phase 0 · credentials</h4>
       <ul class="tasks-list">
         <li class="task done"><span class="st">Done</span><div>Rotate production credentials<small>Done on 10 Oct with about 5 s of downtime. Details in the private notes, N2.</small></div></li>
@@ -400,9 +400,9 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
       </ul></div>
       <div class="phase"><h4>Phase 3 · sync tools</h4>
       <ul class="tasks-list">
-        <li class="task ready"><span class="st">Ready</span><div>Build <code>lhtsync</code><small>Export, plan and apply for both profiles and both directions: three-way merge, stock by difference, image URL rewrite, user matching by email, conflict report.</small></div></li>
-        <li class="task ready"><span class="st">Ready</span><div>Build the <code>/data-sync</code> skill<small>Runs a whole sync, including the maintenance window, backup, revert and sync log.</small></div></li>
-        <li class="task ready"><span class="st">Ready</span><div>Build the <code>/peer-sync</code> skill<small>Code sync by cherry-pick, with a decision log.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Build <code>lhtsync</code><small>Tested end to end on two databases and on a full copy of the dev data. Export, plan and apply for both profiles and both directions: three-way merge, stock by difference, image URL rewrite, user matching by email, conflict report.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Build the <code>/data-sync</code> skill<small>Runs a whole sync, including the maintenance window, backup, revert and sync log. Every conflict is explained and approved one by one.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Build the <code>/peer-sync</code> skill<small>Code sync by cherry-pick, with a decision log. Every commit is explained (change, impact, recommendation) and approved one by one.</small></div></li>
         <li class="task later"><span class="st">After LAB is live</span><div>Rehearse a full LAB → MAIN sync as a dry run<small>Plan only, no apply. Proves the recovery path works before it’s needed.</small></div></li>
       </ul></div>
     </div>
@@ -425,7 +425,7 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
       <div class="phase"><h4>Phase 1 · infrastructure (eu-west-1)</h4>
       <ul class="tasks-list">
         <li class="task todo"><span class="st">To do</span><div>RDS Postgres 16, not publicly accessible, with a dedicated app user that isn’t the master user</div></li>
-        <li class="task todo"><span class="st">To do</span><div>S3 images bucket with versioning on, and LAB’s exchange bucket with read access for MAIN</div></li>
+        <li class="task todo"><span class="st">To do</span><div>S3 images bucket with versioning on, and LAB’s exchange bucket. Grant MAIN read access to both<small>MAIN reads LAB’s packages and copies LAB’s images during a LAB → MAIN sync.</small></div></li>
         <li class="task todo"><span class="st">To do</span><div>Cognito user pool and app client</div></li>
         <li class="task todo"><span class="st">To do</span><div>EC2 with Docker, same as MAIN: a restart policy, a security group limited to known IPs, and a TLS certificate for <code>lab.lahatj.com</code></div></li>
         <li class="task todo"><span class="st">To do</span><div>Secrets Manager entry for Gemini, Bedrock model access, CloudWatch log group, SES</div></li>
@@ -442,7 +442,7 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
       </ul></div>
       <div class="phase"><h4>Phase 3 · ongoing</h4>
       <ul class="tasks-list">
-        <li class="task todo"><span class="st">To do</span><div>Use <code>/peer-sync</code> for code changes in both directions</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Use <code>/peer-sync</code> for code changes and <code>/data-sync</code> to apply MAIN’s packages into LAB</div></li>
       </ul></div>
     </div>
   </div>
@@ -462,7 +462,7 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
       <tr><td class="mono">Q6</td><td>API keys</td><td>Matania's own Gemini, goldapi and apilayer keys.</td></tr>
       <tr><td class="mono">Q7</td><td>Hosting</td><td>Same setup as MAIN: EC2 + Docker.</td></tr>
       <tr><td class="mono">Q8</td><td>Other tables</td><td>Audit log, notifications, invitations, access requests and settings stay in each environment. Gold stock is part of the full sync.</td></tr>
-      <tr><td class="mono">Q9</td><td>Sync cadence</td><td>On demand, run by Eliyahu.</td></tr>
+      <tr><td class="mono">Q9</td><td>Sync cadence</td><td>On demand. Eliyahu coordinates and applies into MAIN; Matania applies into LAB, because each side reaches only its own database.</td></tr>
       <tr><td class="mono">Q10</td><td>Git history</td><td>Matania already has read access to the full history (see N2).</td></tr>
       <tr><td class="mono">Q11</td><td>Customer data access</td><td>Matania only. Other LAB users use the app, with no AWS or database access.</td></tr>
       <tr><td class="mono">Q12</td><td>Maintenance window</td><td>Up to 60 minutes after business hours. Revert decision by minute 50.</td></tr>
@@ -474,7 +474,7 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
 <section id="risks">
   <h2>Risks</h2>
   <div class="risks">
-    <div class="risk"><span class="sev h">High</span><div><b>Automatic schema migration drops columns</b><p>Ent runs <code>WithDropColumn(true)</code>, so a restore or cherry-pick from the other side can silently drop a column the receiving side still uses. Fix: the schema check aborts the plan; consider versioned migrations before the first merge.</p></div></div>
+    <div class="risk"><span class="sev m">Medium</span><div><b>Schemas drift apart</b><p>A column or value added on one side makes the other side’s data incompatible. Fix: <code>lhtsync</code> refuses to plan until the schemas match, so code sync (<code>/peer-sync</code>) always comes first. Production never drops columns automatically (only dev does).</p></div></div>
     <div class="risk"><span class="sev m">Medium</span><div><b>Recovery is only as fresh as LAB’s last export</b><p>If LAB fails, work since its last nightly package is at risk. Fix: the nightly export, and a dry-run rehearsal of LAB → MAIN.</p></div></div>
     <div class="risk"><span class="sev m">Medium</span><div><b>Replacing MAIN’s images bucket policy breaks every image</b><p>The existing policy is what the live site depends on. Fix: add a statement, never paste over the policy; review it in the console.</p></div></div>
     <div class="risk"><span class="sev m">Medium</span><div><b>A late revert loses employees’ work</b><p>Fix: verify inside the window, keep the window short, and announce it.</p></div></div>
