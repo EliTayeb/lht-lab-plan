@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<style>html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>LHT Lab Environment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single reading column with a sticky table of contents on wide screens. Utilitarian design doc, gold accent used sparingly. */
+:root{
+  --ink:#1b2230; --ink-2:#4a5466; --ink-3:#717b8d;
+  --paper:#f6f7f9; --sheet:#ffffff; --line:#dde1e8; --tint:#eef1f5;
+  --gold:#a8791f; --gold-soft:#f5ecd9;
+  --main:#2f5d8a; --main-soft:#e3ecf5;
+  --lab:#6a4a9a; --lab-soft:#ece6f5;
+  --ok:#2e7d4f; --warn:#a35c00; --warn-soft:#fbefdc; --bad:#b03a2e; --bad-soft:#f8e3e0;
+  --f-display:"Literata",Georgia,"Times New Roman",serif;
+  --f-body:"Source Sans 3",-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ink:#e6e9ef; --ink-2:#b4bccb; --ink-3:#8a93a5;
+  --paper:#12161d; --sheet:#1a1f28; --line:#2c3340; --tint:#202733;
+  --gold:#d9aa52; --gold-soft:#3a2f1a;
+  --main:#7fb0de; --main-soft:#1d2d3e;
+  --lab:#b79be3; --lab-soft:#2b2340;
+  --ok:#6cc895; --warn:#e7a54a; --warn-soft:#3a2c17; --bad:#ef8a7e; --bad-soft:#3d221f;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#e6e9ef; --ink-2:#b4bccb; --ink-3:#8a93a5;
+  --paper:#12161d; --sheet:#1a1f28; --line:#2c3340; --tint:#202733;
+  --gold:#d9aa52; --gold-soft:#3a2f1a;
+  --main:#7fb0de; --main-soft:#1d2d3e;
+  --lab:#b79be3; --lab-soft:#2b2340;
+  --ok:#6cc895; --warn:#e7a54a; --warn-soft:#3a2c17; --bad:#ef8a7e; --bad-soft:#3d221f;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:400 16.5px/1.6 var(--f-body);padding-inline:20px;padding-block:0 80px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr)}nav.toc{display:none}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:40px;font-size:14px}
+nav.toc p{font:600 11px/1 var(--f-body);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+nav.toc a{color:var(--ink-2);text-decoration:none}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--gold)}
+main{min-width:0;max-width:780px}
+header.top{padding-block:44px 28px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:600 12px/1 var(--f-body);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h1{font:650 clamp(30px,4.4vw,42px)/1.12 var(--f-display);margin:12px 0 14px;text-wrap:balance;letter-spacing:-.01em}
+h2{font:650 26px/1.2 var(--f-display);margin:0 0 6px;text-wrap:balance}
+h3{font:700 17px/1.3 var(--f-body);margin:28px 0 8px}
+.lede{font-size:19px;color:var(--ink-2);max-width:64ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:18px;font-size:14px;color:var(--ink-3)}
+.meta b{color:var(--ink-2);font-weight:600}
+section{padding-block:40px 8px;scroll-margin-top:16px}
+section > .sub{color:var(--ink-3);margin:0 0 18px;max-width:64ch}
+p,li{max-width:68ch}
+code,.mono{font-family:var(--f-mono);font-size:.86em}
+p code,li code,td code{background:var(--tint);padding:1px 5px;border-radius:4px}
+pre.code{background:var(--tint);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;font:400 13.5px/1.55 var(--f-mono);margin:12px 0}
+a{color:var(--main)}
+.env{display:inline-block;font:600 12px/1 var(--f-mono);padding:4px 7px;border-radius:5px;vertical-align:1px}
+.env.main{background:var(--main-soft);color:var(--main)}
+.env.lab{background:var(--lab-soft);color:var(--lab)}
+.goals{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px}
+.goals > div{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.goals h3{margin:0 0 8px;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3)}
+.goals ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.diagram{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto;margin:16px 0}
+.diagram svg text{font-family:var(--f-body)}
+.tablewrap{overflow-x:auto;margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:620px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px/1.3 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);background:var(--tint)}
+tr:last-child td{border-bottom:0}
+.pill{display:inline-block;font:600 12px/1 var(--f-body);padding:4px 8px;border-radius:99px;white-space:nowrap}
+.p-sync{background:var(--main-soft);color:var(--main)}
+.p-local{background:var(--tint);color:var(--ink-2)}
+.p-map{background:var(--gold-soft);color:var(--gold)}
+.p-ask{background:var(--warn-soft);color:var(--warn)}
+.callout{border-radius:10px;padding:14px 18px;margin:18px 0;border:1px solid}
+.callout.warn{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.callout.bad{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.callout.note{background:var(--gold-soft);border-color:color-mix(in srgb,var(--gold) 35%,transparent)}
+.callout b.t{display:block;margin-bottom:4px}
+.callout p{margin:0}
+.decisions{display:grid;gap:12px;margin-top:10px}
+.dec{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:52px 1fr;gap:4px 14px}
+.dec .id{font:600 13px/1.5 var(--f-mono);color:var(--gold)}
+.dec b{display:block}
+.dec p{margin:2px 0 0;color:var(--ink-2);font-size:15px}
+.window{counter-reset:step;list-style:none;padding:0;margin:14px 0;display:grid;gap:0}
+.window li{position:relative;padding:10px 0 14px 46px;border-left:2px solid var(--line);margin-left:15px;max-width:none}
+.window li:last-child{border-left-color:transparent}
+.window li::before{counter-increment:step;content:counter(step);position:absolute;left:-16px;top:8px;width:30px;height:30px;border-radius:50%;background:var(--sheet);border:2px solid var(--line);display:grid;place-items:center;font:600 13px/1 var(--f-mono);color:var(--ink-2)}
+.window li.down::before{border-color:var(--bad);color:var(--bad)}
+.window li b{display:block}
+.window li span{color:var(--ink-2);font-size:15px}
+.tag-down{font:600 11px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--bad);margin-left:6px}
+.matrix{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.matrix > div{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px}
+.matrix .k{font:600 12.5px/1.4 var(--f-mono);color:var(--ink-3);display:block;margin-bottom:4px}
+.matrix .r{font-weight:700}
+.r.ok{color:var(--ok)} .r.bad{color:var(--bad)} .r.n{color:var(--ink-2)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:14px}
+.tasks{max-width:640px}
+.side{background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.side > header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;justify-content:space-between}
+.side > header h3{margin:0;font-size:16px}
+.side.eli > header{background:var(--main-soft)}
+.side.col > header{background:var(--lab-soft)}
+.phase{padding:10px 16px 4px}
+.phase h4{font:600 11.5px/1.3 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:8px 0 6px}
+.check{display:grid;grid-template-columns:20px 1fr;gap:8px;align-items:start;padding:6px 0;font-size:15px;line-height:1.45}
+.check input{margin:3px 0 0;width:16px;height:16px;accent-color:var(--gold)}
+.check input:checked + label{color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--ink-3)}
+.check label small{display:block;color:var(--ink-3);font-size:13px;text-decoration:none}
+.progress{font:600 12px/1 var(--f-mono);color:var(--ink-3)}
+.qs{display:grid;gap:12px;margin-top:12px}
+.unused-q{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:14px 18px}
+.q .head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.q .id{font:600 13px/1 var(--f-mono);color:var(--warn)}
+.q .head b{flex:1;min-width:220px}
+.q .area{font:600 11px/1 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.q p{margin:6px 0 0;color:var(--ink-2);font-size:15px}
+.q .rec{margin-top:8px;font-size:15px}
+.q .rec::before{content:"Recommended: ";font-weight:700;color:var(--ok)}
+.q textarea{width:100%;margin-top:10px;min-height:38px;resize:vertical;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font:14px/1.4 var(--f-body);padding:8px 10px}
+.q textarea:focus-visible,.check input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.risks{display:grid;gap:10px;margin-top:12px}
+.risk{display:grid;grid-template-columns:86px 1fr;gap:12px;align-items:start;background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px 16px;font-size:15px}
+.sev{font:600 11.5px/1 var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;border-radius:99px;text-align:center}
+.sev.h{background:var(--bad-soft);color:var(--bad)} .sev.m{background:var(--warn-soft);color:var(--warn)}
+.risk p{margin:2px 0 0;color:var(--ink-2)}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink-3);font-size:13.5px}
+@media (max-width:520px){.dec{grid-template-columns:1fr}.risk{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<nav class="toc" aria-label="Contents">
+  <p>Contents</p>
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#arch">Architecture</a></li>
+    <li><a href="#decisions">Key decisions</a></li>
+    <li><a href="#data">Data sync</a></li>
+    <li><a href="#window">Maintenance window</a></li>
+    <li><a href="#code">Code sync</a></li>
+    <li><a href="#eliyahu">Eliyahu’s tasks</a></li>
+    <li><a href="#matania">Matania’s tasks</a></li>
+    <li><a href="#questions">Answered questions</a></li>
+    <li><a href="#risks">Risks</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="top">
+  <div class="eyebrow">Design · reviewed</div>
+  <h1>LHT Lab: an isolated second environment</h1>
+  <p class="lede">A separate AWS account, repo and set of users where Matania can change the app freely, without access to the production server. Data and code move between the two environments only by a manual, reversible sync that both sides approve.</p>
+  <div class="meta"><span><b>Owner</b> Eliyahu</span><span><b>LAB owner</b> Matania</span><span><b>Status</b> v2, all questions answered, 10 Oct 2026</span><span><b>Environments</b> <span class="env main">MAIN</span> app.lahatj.com &nbsp;·&nbsp; <span class="env lab">LAB</span> Matania's copy</span></div>
+<div class="callout note"><b class="t">Some details are kept off this public page</b><p>Resource names, the AWS account ID and anything security-related are left out on purpose. Eliyahu sends them to Matania privately by email in <b>LHT-Lab-private-notes.md</b>. References like <b>N1</b>–<b>N5</b> on this page point to sections of that file.</p></div>
+</header>
+
+<section id="summary">
+  <h2>Summary</h2>
+  <p class="sub">Both environments serve the same business. LAB is not a staging environment; it is a parallel copy of the product that may later be merged back or retired.</p>
+  <div class="goals">
+    <div>
+      <h3>Goals</h3>
+      <ul>
+        <li>LAB runs in its own AWS account with its own bill, credentials, users and Cognito pool.</li>
+        <li>Nobody from LAB can reach MAIN's server, database or bucket unless MAIN grants it.</li>
+        <li>The catalog syncs both ways. Orders and customers sync from MAIN to LAB only. Conflicts are skipped and reported.</li>
+        <li>Every sync takes a backup first and can be reverted.</li>
+        <li>Code moves both ways through simple cherry-picks guided by a local skill.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Not in scope now</h3>
+      <ul>
+        <li>A proper staging environment.</li>
+        <li>Live or automatic replication between the two databases.</li>
+        <li>Merging the two apps back into one (decided in a few months).</li>
+        <li>Shared login: an employee has a separate account in each environment.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="arch">
+  <h2>Architecture</h2>
+  <p class="sub">Two standalone AWS accounts, with no AWS Organization between them, because an Organization means one paying account. They connect only through private "exchange" buckets that each side opens to the other.</p>
+  <div class="diagram">
+    <svg viewBox="0 0 760 400" width="100%" role="img" aria-label="MAIN and LAB AWS accounts with exchange buckets between them">
+      <rect x="10" y="10" width="300" height="300" rx="12" fill="var(--main-soft)" stroke="var(--main)" stroke-width="1.5"/>
+      <text x="28" y="38" fill="var(--main)" font-size="14" font-weight="700">MAIN · AWS account</text>
+      <text x="28" y="56" fill="var(--ink-3)" font-size="12">Eliyahu · billed separately</text>
+      <rect x="450" y="10" width="300" height="300" rx="12" fill="var(--lab-soft)" stroke="var(--lab)" stroke-width="1.5"/>
+      <text x="468" y="38" fill="var(--lab)" font-size="14" font-weight="700">LAB · new AWS account</text>
+      <text x="468" y="56" fill="var(--ink-3)" font-size="12">Matania · billed separately</text>
+      <g font-size="13" fill="var(--ink)">
+        <rect x="30" y="74" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="44" y="96">EC2 + Docker · app.lahatj.com</text>
+        <rect x="30" y="116" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="44" y="138">RDS Postgres 16</text>
+        <rect x="30" y="158" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="44" y="180">S3 images bucket (~5 GB)</text>
+        <rect x="30" y="200" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="44" y="222">Cognito pool · MAIN users</text>
+        <rect x="30" y="252" width="260" height="40" rx="6" fill="var(--gold-soft)" stroke="var(--gold)"/><text x="44" y="277" font-weight="600">S3 exchange bucket (private)</text>
+        <rect x="470" y="74" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="484" y="96">EC2 + Docker · LAB domain</text>
+        <rect x="470" y="116" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="484" y="138">RDS Postgres 16</text>
+        <rect x="470" y="158" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="484" y="180">S3 images bucket (LAB)</text>
+        <rect x="470" y="200" width="260" height="34" rx="6" fill="var(--sheet)" stroke="var(--line)"/><text x="484" y="222">Cognito pool · LAB users</text>
+        <rect x="470" y="252" width="260" height="40" rx="6" fill="var(--gold-soft)" stroke="var(--gold)"/><text x="484" y="277" font-weight="600">S3 exchange bucket (private)</text>
+      </g>
+      <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--gold)"/></marker></defs>
+      <line x1="292" y1="266" x2="468" y2="266" stroke="var(--gold)" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="468" y1="280" x2="292" y2="280" stroke="var(--gold)" stroke-width="2" marker-end="url(#ar)"/>
+      <text x="380" y="252" fill="var(--ink-2)" font-size="11.5" text-anchor="middle">read-only, revocable</text>
+      <text x="380" y="300" fill="var(--ink-2)" font-size="11.5" text-anchor="middle">sync packages</text>
+      <rect x="140" y="336" width="200" height="44" rx="8" fill="var(--sheet)" stroke="var(--main)"/>
+      <text x="240" y="356" fill="var(--main)" font-size="13" font-weight="600" text-anchor="middle">MAIN GitHub repo</text>
+      <text x="240" y="372" fill="var(--ink-3)" font-size="11.5" text-anchor="middle">MAIN repo</text>
+      <rect x="420" y="336" width="200" height="44" rx="8" fill="var(--sheet)" stroke="var(--lab)"/>
+      <text x="520" y="356" fill="var(--lab)" font-size="13" font-weight="600" text-anchor="middle">Matania's repo</text>
+      <text x="520" y="372" fill="var(--ink-3)" font-size="11.5" text-anchor="middle">full-history copy</text>
+      <line x1="342" y1="352" x2="418" y2="352" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+      <line x1="418" y1="366" x2="342" y2="366" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar2)"/>
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker></defs>
+      <text x="380" y="394" fill="var(--ink-3)" font-size="11" text-anchor="middle">fetch + cherry-pick</text>
+    </svg>
+  </div>
+  <p>The rule that keeps MAIN safe: <b>each side only ever writes to its own account.</b> To sync, the source side exports a package into its own exchange bucket. The target side reads that package through a read-only grant and applies it to its own database. Neither side ever holds the other's database password, SSH key or AWS keys.</p>
+</section>
+
+<section id="decisions">
+  <h2>Key decisions</h2>
+  <p class="sub">The design choices. Your answers to the review questions are listed under <a href="#questions">Answered questions</a>.</p>
+  <div class="decisions">
+    <div class="dec"><span class="id">D1</span><div><b>Two standalone AWS accounts, linked by bucket policies</b><p>Each side grants the other account read access to its exchange bucket with a single bucket-policy statement. A sync only works while both sides keep their statement in place, so it needs both sides' agreement. Removing your statement cuts the link instantly. Every read is logged in CloudTrail.</p></div></div>
+    <div class="dec"><span class="id">D2</span><div><b>Record IDs never collide: LAB numbers start at 1,000,000,000</b><p>Both databases use auto-incrementing integer IDs. After the first copy, LAB moves every ID counter (Postgres sequence) up to 1,000,000,000, so a record's ID means the same thing in both environments. With unique IDs, a merge doesn't need to translate IDs between the two databases. Order numbers get the same treatment through the <code>LAST_ORDER_NUMBER</code> setting, so LAB orders start at 900000.</p></div></div>
+    <div class="dec"><span class="id">D3</span><div><b>Three-way merge against the last sync</b><p>Every sync stores a snapshot of the data at sync time. The next sync compares source, target and that baseline, so it can tell "only one side changed this" (apply it) apart from "both sides changed this" (a conflict).</p></div></div>
+    <div class="dec"><span class="id">D4</span><div><b>Dry run first, downtime second</b><p>The merge plan and conflict report are generated while both apps are still up. The target goes down only to take the backup and apply the plan you already reviewed.</p></div></div>
+    <div class="dec"><span class="id">D5</span><div><b>Matania mirrors the repo into a personal account, not a GitHub fork</b><p>Matania already has read access, and copies the full history with <code>git clone --mirror</code> and <code>git push --mirror</code> into a new private repo. When someone loses access to a private repo, GitHub deletes their forks of it, but a mirror survives. A full-history copy keeps the common ancestor, so cherry-picks work in both directions.</p></div></div>
+    <div class="dec"><span class="id">D6</span><div><b>Values that differ per environment move to environment variables, in MAIN first</b><p>The bucket name, image URL prefix, domain, email sender and AWS region are currently hardcoded in about 15 files. If both repos edit those lines differently, every future cherry-pick conflicts. LAB then takes this change as its first cherry-pick.</p></div></div>
+    <div class="dec"><span class="id">D7</span><div><b>LAB emails employees only</b><p>A new setting limits outgoing email to admin, editor and sales_rep users, so customers never receive a second copy. MAIN keeps it switched off.</p></div></div>
+  </div>
+</section>
+
+<section id="data">
+  <h2>Data sync</h2>
+  <p class="sub">There are two sync modes, built in two stages. Full copy works from day one with standard tools. Merge sync is built once there is real divergence to merge.</p>
+
+  <h3>Mode A: full copy (stage 1)</h3>
+  <p>The target becomes an exact copy of the source: <code>pg_dump</code> → exchange bucket → <code>pg_restore</code>, plus an image sync. The target's own changes since the last sync are lost, so this mode is for the first setup and for resetting LAB. It is simple, reliable and fully reversible from the backup.</p>
+
+  <h3>Mode B: merge sync (stage 2)</h3>
+  <p>A small CLI in the repo (<code>cmd/lhtsync</code>) exports the synced tables as JSON plus a manifest: source environment, git commit, schema fingerprint, time and row counts. On the target it compares three versions of every record, looked up by ID:</p>
+  <div class="matrix">
+    <div><span class="k">changed only in source</span><span class="r ok">Apply</span></div>
+    <div><span class="k">changed only in target</span><span class="r n">Keep target</span></div>
+    <div><span class="k">changed on both, same result</span><span class="r n">Nothing to do</span></div>
+    <div><span class="k">changed on both, differently</span><span class="r bad">Conflict</span></div>
+    <div><span class="k">new in source</span><span class="r ok">Insert</span></div>
+    <div><span class="k">new on both, same SKU or email</span><span class="r bad">Conflict</span></div>
+    <div><span class="k">soft-deleted (<code>removed=true</code>)</span><span class="r ok">Sync as a normal change</span></div>
+    <div><span class="k">hard-deleted on one side</span><span class="r bad">Reported, not applied</span></div>
+  </div>
+
+  <h3>Conflict handling</h3>
+  <p>Each conflict lands in an HTML report. The default is <b>skip and report</b>. You can override it per record or per table:</p>
+  <ul>
+    <li><b>skip</b> leaves both sides as they are, and the conflict shows up again next time (the default).</li>
+    <li><b>source wins</b> / <b>target wins</b> applies to the whole record.</li>
+    <li><b>field merge</b> combines the two when the sides changed different fields of the same record, for example price on one side and description on the other.</li>
+  </ul>
+  <p>The plan aborts before any downtime when the schema fingerprints don't match on a synced table. Examples are a column one side added, or an enum value the other side doesn't know. Those changes have to be cherry-picked across first, so <b>code sync always comes before data sync.</b></p>
+
+  <h3>What syncs</h3>
+  <p>Only the catalog flows from LAB back to MAIN, so <b>a merge into MAIN only ever touches catalog tables</b>. Orders created in LAB stay in LAB.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Data</th><th>Tables</th><th>Direction</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Catalog</td><td><code>jewelry</code>, <code>jewelry_diamond</code>, <code>collection</code>, <code>collection_jewelry</code></td><td><span class="pill p-sync">Both ways</span></td><td>SKU must stay unique. A new SKU created on both sides is a conflict.</td></tr>
+      <tr><td>Images</td><td>S3 bucket</td><td><span class="pill p-sync">Both ways, add only</span></td><td><code>aws s3 sync</code> without <code>--delete</code>, following the catalog. File names are unique, so images are only ever added. The manifest lists every added file so a revert can remove them.</td></tr>
+      <tr><td>Orders</td><td><code>order</code>, <code>order_details</code>, <code>order_message</code></td><td><span class="pill p-map">MAIN → LAB</span></td><td>Order numbers come from separate ranges (D2), so MAIN's orders never overwrite LAB's own test orders.</td></tr>
+      <tr><td>Users and customers</td><td><code>user</code></td><td><span class="pill p-map">MAIN → LAB</span></td><td><code>cognito_id</code> is per environment and never copied. LAB links users by email. Passwords can't leave Cognito, so an employee who needs LAB gets an invite.</td></tr>
+      <tr><td>Approvals and consents</td><td><code>jewelry_approval</code>, <code>collection_approval</code>, <code>customer_setting</code>, <code>consent</code></td><td><span class="pill p-map">MAIN → LAB</span></td><td>Follows users and customers.</td></tr>
+      <tr><td>Live prices and counters</td><td><code>setting</code></td><td><span class="pill p-local">Local</span></td><td>Each side's background job fetches its own prices. Order-number ranges are separate.</td></tr>
+      <tr><td>Everything else</td><td><code>audit_log</code>, <code>notification</code>, <code>invitation</code>, <code>request_access</code>, <code>gold_stock</code></td><td><span class="pill p-local">Local</span></td><td>Never synced. Each environment keeps its own.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="window">
+  <h2>Maintenance window</h2>
+  <p class="sub">Eliyahu runs every sync, on demand, after business hours, with a limit of 60 minutes. It runs on the target side, which is the environment receiving data. The source stays up because <code>pg_dump</code> reads a consistent snapshot. Catalog changes going back to MAIN need a second window on MAIN.</p>
+  <ol class="window">
+    <li><b>Dry run, the day before</b><span>Generate the merge plan and conflict report, resolve conflicts, and freeze the plan. Both apps stay up.</span></li>
+    <li><b>Announce the window</b><span>Message employees with the time and expected length (up to 60 minutes, after business hours).</span></li>
+    <li class="down"><b>Switch to maintenance mode <span class="tag-down">app down</span></b><span>Stop the app container and serve a static "under maintenance" page on the same address. <code>/health</code> stays down so nobody mistakes it for the live app.</span></li>
+    <li class="down"><b>Back up <span class="tag-down">app down</span></b><span>Take a manual RDS snapshot, plus a <code>pg_dump</code> into the exchange bucket. Record the backup IDs and the time in the sync log. Image versioning is already on.</span></li>
+    <li class="down"><b>Apply <span class="tag-down">app down</span></b><span>Mode A restores the package. Mode B applies the frozen plan inside one database transaction, so a failure rolls back automatically. Then sync the images.</span></li>
+    <li class="down"><b>Verify <span class="tag-down">app down</span></b><span>Start the app. Compare row counts against the manifest. Smoke-test: log in, open the catalog, open one synced order, open one image.</span></li>
+    <li><b>Reopen, or revert by minute 50</b><span>If everything passes, remove the maintenance page. If anything fails, or verification isn't finished by minute 50, revert so the app is back within the hour.</span></li>
+  </ol>
+  <div class="callout note"><b class="t">Revert</b><p>Stop the app, then <code>pg_restore</code> the step-4 dump (or restore the RDS snapshot to a new instance and point the app at it). Delete the image files listed in the manifest, and start the app. A revert after the window reopens also discards whatever employees entered since, so the decision belongs inside the window. Backups are kept for 30 days.</p></div>
+</section>
+
+<section id="code">
+  <h2>Code sync</h2>
+  <p class="sub">Manual and selective. There is no shared branch; each side decides what to take.</p>
+  <pre class="code"># once, in each repo
+git remote add peer &lt;the other repo's URL&gt;   # fetch-only
+git config rerere.enabled true                  # remember how a conflict was resolved
+
+# each time
+git fetch peer
+git log --oneline main..peer/main --no-merges   # what they have that you don't
+git cherry-pick -x &lt;sha&gt;                        # -x records the source commit</pre>
+  <p>A local Claude skill, <code>/peer-sync</code>, wraps this so neither of you needs extra tooling:</p>
+  <ul>
+    <li>Lists the peer's new commits, grouped and summarised in plain language.</li>
+    <li>Flags commits that touch <code>ent/schema/</code>, because these affect data sync, and commits that touch configuration or deploy scripts.</li>
+    <li>For each commit, offers to <b>take</b> it (cherry-pick), <b>skip</b> it, or <b>study</b> it (explain it so you can rewrite it your own way).</li>
+    <li>Records every decision in <code>docs/PEER_SYNC_LOG.md</code>, so skipped commits aren't offered again.</li>
+  </ul>
+  <p>Ground rules for both sides: small commits that each do one thing, schema changes in their own commits, and no environment-specific values in code.</p>
+</section>
+
+<section id="eliyahu">
+  <h2>Eliyahu’s tasks · MAIN</h2>
+  <p class="sub">Your side, in order. Ticking a box only saves in your own browser.</p>
+  <div class="tasks">
+    <div class="side eli">
+      <header><h3>MAIN · app.lahatj.com</h3><span class="progress" id="prog-eli"></span></header>
+      <div class="phase"><h4>Phase 0 · now, urgent</h4>
+        <div class="check"><input type="checkbox" id="e1"><label for="e1">Rotate production credentials before LAB goes live<small>Details in the private notes, section N2.</small></label></div>
+        <div class="check"><input type="checkbox" id="e2"><label for="e2">Confirm the RDS master password is no longer the same as the local one</label></div>
+      </div>
+      <div class="phase"><h4>Phase 1 · prepare the code</h4>
+        <div class="check"><input type="checkbox" id="e3"><label for="e3">Move bucket, image URL prefix, region, domain, CORS/allowed hosts and SES sender to environment variables<small>s3.go, router.go, jewelry/handler.go, email/*, requestaccess/public.go, 3 frontend files</small></label></div>
+        <div class="check"><input type="checkbox" id="e4"><label for="e4">Make the Gemini secret name and the goldapi/apilayer keys configurable, with today's values as defaults</label></div>
+        <div class="check"><input type="checkbox" id="e5a"><label for="e5a">Add the "email employees only" setting (D7), off by default</label></div>
+        <div class="check"><input type="checkbox" id="e5"><label for="e5">Add the maintenance page (static container) and the window script</label></div>
+        <div class="check"><input type="checkbox" id="e6"><label for="e6">Deploy to MAIN and confirm nothing changed</label></div>
+      </div>
+      <div class="phase"><h4>Phase 2 · hand over</h4>
+        <div class="check"><input type="checkbox" id="e8"><label for="e8">Create MAIN’s exchange bucket (private, versioned, 30-day expiry) and grant LAB's account read access</label></div>
+        <div class="check"><input type="checkbox" id="e9"><label for="e9">Grant LAB's account read and list access on MAIN’s images bucket<small>Add a statement to the existing policy; don't replace it. Bucket names in N1.</small></label></div>
+        <div class="check"><input type="checkbox" id="e10"><label for="e10">Export the first package (Mode A) into the exchange bucket</label></div>
+        <div class="check"><input type="checkbox" id="e11"><label for="e11">Add DNS records for <code>lab.lahatj.com</code> and its SES email verification (Matania sends the records)</label></div>
+      </div>
+      <div class="phase"><h4>Phase 3 · ongoing</h4>
+        <div class="check"><input type="checkbox" id="e12"><label for="e12">Build <code>lhtsync</code> merge mode and the <code>/peer-sync</code> skill</label></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="matania">
+  <h2>Matania’s tasks · LAB</h2>
+  <p class="sub">Matania’s side, in order. Phase 1 can start in parallel with your Phase 1. Phase 2 needs your exchange bucket and first package.</p>
+  <div class="tasks">
+    <div class="side col">
+      <header><h3>LAB · lab.lahatj.com</h3><span class="progress" id="prog-col"></span></header>
+      <div class="phase"><h4>Phase 0 · account</h4>
+        <div class="check"><input type="checkbox" id="c1"><label for="c1">Create the AWS account with MFA on the root login, plus a budget alarm</label></div>
+        <div class="check"><input type="checkbox" id="c2"><label for="c2">Create a personal IAM user with MFA; nobody uses root day to day<small>Only Matania gets AWS and database access. Other LAB users use the app only.</small></label></div>
+        <div class="check"><input type="checkbox" id="c3"><label for="c3">Mirror Eliyahu's repo into a new private repo in Matania’s own account<small><code>git clone --mirror</code>, then <code>git push --mirror</code>. Not a GitHub fork.</small></label></div>
+      </div>
+      <div class="phase"><h4>Phase 1 · infrastructure (eu-west-1)</h4>
+        <div class="check"><input type="checkbox" id="c4"><label for="c4">RDS Postgres 16, not publicly accessible, with a dedicated app user that isn't the master user</label></div>
+        <div class="check"><input type="checkbox" id="c5"><label for="c5">S3 images bucket with versioning on, and LAB’s exchange bucket with read access for MAIN (MAIN’s account ID in N1)</label></div>
+        <div class="check"><input type="checkbox" id="c6"><label for="c6">Cognito user pool and app client</label></div>
+        <div class="check"><input type="checkbox" id="c7"><label for="c7">EC2 with Docker, same as MAIN: a restart policy, a security group limited to known IPs, and a TLS certificate for <code>lab.lahatj.com</code></label></div>
+        <div class="check"><input type="checkbox" id="c8"><label for="c8">Secrets Manager entry for Gemini, Bedrock model access, CloudWatch log group, SES</label></div>
+        <div class="check"><input type="checkbox" id="c9"><label for="c9">Own Docker registry (ECR or Docker Hub), and Matania’s own Gemini, goldapi and apilayer keys</label></div>
+        <div class="check"><input type="checkbox" id="c9a"><label for="c9a">Turn on "email employees only" and send Eliyahu the DNS records for the domain and SES</label></div>
+      </div>
+      <div class="phase"><h4>Phase 2 · first data</h4>
+        <div class="check"><input type="checkbox" id="c10"><label for="c10">Restore Eliyahu's first package and sync the images from MAIN’s images bucket</label></div>
+        <div class="check"><input type="checkbox" id="c11"><label for="c11">Move ID counters to 1,000,000,000 and LAST_ORDER_NUMBER to 900000</label></div>
+        <div class="check"><input type="checkbox" id="c12"><label for="c12">Clear every <code>cognito_id</code>, then invite LAB users by email</label></div>
+        <div class="check"><input type="checkbox" id="c13"><label for="c13">Deploy, run the smoke test, then save the package as the first sync baseline</label></div>
+      </div>
+      <div class="phase"><h4>Phase 3 · ongoing</h4>
+        <div class="check"><input type="checkbox" id="c14"><label for="c14">Cherry-pick Eliyahu's configuration commit (D6) first, then use <code>/peer-sync</code> for everything after</label></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="questions">
+  <h2>Answered questions</h2>
+  <p class="sub">Answered by Eliyahu on 10 Oct 2026. No questions remain open.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>#</th><th>Topic</th><th>Answer</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Q1</td><td>Conflict default</td><td>Skip and report. Nothing changes silently.</td></tr>
+      <tr><td class="mono">Q2</td><td>What syncs</td><td>Catalog and images both ways. Orders, customers and approvals MAIN → LAB only.</td></tr>
+      <tr><td class="mono">Q3</td><td>LAB domain</td><td>lab.lahatj.com. Eliyahu adds the DNS records.</td></tr>
+      <tr><td class="mono">Q4</td><td>LAB emails</td><td>Employees only. Customers never get mail from LAB.</td></tr>
+      <tr><td class="mono">Q5</td><td>LAB image access</td><td>Same access model as MAIN (details in N3).</td></tr>
+      <tr><td class="mono">Q6</td><td>API keys</td><td>Matania's own Gemini, goldapi and apilayer keys.</td></tr>
+      <tr><td class="mono">Q7</td><td>Hosting</td><td>Same setup as MAIN: EC2 + Docker.</td></tr>
+      <tr><td class="mono">Q8</td><td>Other tables</td><td>Audit log, notifications, invitations, access requests and gold stock all stay local.</td></tr>
+      <tr><td class="mono">Q9</td><td>Sync cadence</td><td>On demand, run by Eliyahu.</td></tr>
+      <tr><td class="mono">Q10</td><td>Git history</td><td>Matania already has read access to the full history. Eliyahu handles the related credential work in Phase 0 (N2).</td></tr>
+      <tr><td class="mono">Q11</td><td>Customer data access</td><td>Matania only. Other LAB users use the app, with no AWS or database access.</td></tr>
+      <tr><td class="mono">Q12</td><td>Maintenance window</td><td>Up to 60 minutes after business hours. Revert decision by minute 50.</td></tr>
+      <tr><td class="mono">Q13</td><td>LAB repo</td><td>Matania mirrors the repo into a personal private repo, not a GitHub fork.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="risks">
+  <h2>Risks</h2>
+  <div class="risks">
+    <div class="risk"><span class="sev h">High</span><div><b>Credentials must be rotated before LAB goes live</b><p>Fix: Eliyahu’s Phase 0 (details in N2).</p></div></div>
+    <div class="risk"><span class="sev h">High</span><div><b>Automatic schema migration drops columns</b><p>Ent runs <code>WithDropColumn(true)</code>, so a restore or cherry-pick from the other side can silently drop a column the receiving side still uses. Fix: the schema check aborts the plan; consider versioned migrations before stage 2.</p></div></div>
+    <div class="risk"><span class="sev m">Medium</span><div><b>Replacing MAIN’s images bucket policy breaks every image</b><p>The existing policy is what the live site depends on. Fix: add a statement, never paste over the policy; review it in the console.</p></div></div>
+    <div class="risk"><span class="sev m">Medium</span><div><b>A late revert loses employees' work</b><p>Fix: verify inside the window, keep the window short, and announce it.</p></div></div>
+    <div class="risk"><span class="sev m">Medium</span><div><b>Customers receive emails from both environments</b><p>Fix: LAB emails employees only (D7).</p></div></div>
+  </div>
+</section>
+
+<footer>Facts checked on 8–10 Oct 2026: storage size, access model, Ent ID types, hardcoded values per file. AWS sources: IAM cross-account access, Well-Architected SEC03-BP09, S3 replication requirements.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+  function prog(){
+    [['eli','.side.eli'],['col','.side.col']].forEach(([id,sel])=>{
+      const boxes=[...document.querySelectorAll(sel+' input[type=checkbox]')];
+      const done=boxes.filter(b=>b.checked).length;
+      document.getElementById('prog-'+id).textContent=done+' / '+boxes.length;
+    });
+  }
+  document.querySelectorAll('.check input').forEach(b=>{
+    b.checked=store.get('lab-'+b.id)==='1';
+    b.addEventListener('change',()=>{store.set('lab-'+b.id,b.checked?'1':'0');prog();});
+  });
+  document.querySelectorAll('.q textarea').forEach(t=>{
+    t.value=store.get('lab-'+t.id)||'';
+    t.addEventListener('input',()=>store.set('lab-'+t.id,t.value));
+  });
+  prog();
+})();
+</script>
+
+</body>
+</html>
