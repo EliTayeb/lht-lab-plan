@@ -373,10 +373,10 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
 
 <section id="eliyahu">
   <h2>Eliyahu’s tasks · MAIN</h2>
-  <p class="sub">7 of 16 done. MAIN is ready for LAB. Items marked Ready can start now; the rest wait on Matania or on LAB being live.</p>
+  <p class="sub">10 of 16 done. MAIN is ready for LAB. Items marked Ready can start now; the rest wait on Matania or on LAB being live.</p>
   <div class="tasks">
     <div class="side eli">
-      <header><h3>MAIN · app.lahatj.com</h3><span class="progress">7 / 16 done</span></header>
+      <header><h3>MAIN · app.lahatj.com</h3><span class="progress">10 / 16 done</span></header>
       <div class="phase"><h4>Phase 0 · credentials</h4>
       <ul class="tasks-list">
         <li class="task done"><span class="st">Done</span><div>Rotate production credentials<small>Done on 10 Oct with about 5 s of downtime. Details in the private notes, N2.</small></div></li>
@@ -392,10 +392,10 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
       </ul></div>
       <div class="phase"><h4>Phase 2 · open the link</h4>
       <ul class="tasks-list">
-        <li class="task ready"><span class="st">Ready</span><div>Create an admin AWS login for setup work<small>The everyday login can’t create buckets or edit bucket policies.</small></div></li>
-        <li class="task ready"><span class="st">Ready</span><div>Create MAIN’s exchange bucket<small>Private, versioned, 30-day expiry.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Create an admin AWS login for setup work<small>Browser sign-in for the IAM admin user, with no long-lived keys.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Create MAIN’s exchange bucket<small>Private, all public access blocked, versioned, encrypted, TLS only; packages and backups expire after 30 days.</small></div></li>
         <li class="task wait"><span class="st">Waiting on Matania</span><div>Grant LAB’s account read access to the exchange bucket and the images bucket<small>Needs LAB’s AWS account ID. Add statements to the images bucket policy; never replace it. Names in N1.</small></div></li>
-        <li class="task ready"><span class="st">Ready</span><div>Export the first full package<small>Into the exchange bucket, ready for LAB’s first restore.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Export the first full package<small>10 Oct: 28 MB, 19 tables, with a manifest, verified. Exported again just before LAB’s restore so the data is fresh (<code>scripts/export-full-package.sh</code>, no downtime).</small></div></li>
         <li class="task wait"><span class="st">Waiting on Matania</span><div>Add DNS records for <code>lab.lahatj.com</code> and its email verification<small>Needs the records from Matania.</small></div></li>
       </ul></div>
       <div class="phase"><h4>Phase 3 · sync tools</h4>
