@@ -109,7 +109,18 @@ tr:last-child td{border-bottom:0}
 .matrix .r{font-weight:700}
 .r.ok{color:var(--ok)} .r.bad{color:var(--bad)} .r.n{color:var(--ink-2)}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:14px}
-.tasks{max-width:640px}
+.tasks{max-width:760px}
+.tasks-list{list-style:none;margin:0 0 8px;padding:0;display:grid}
+.task{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start;padding:9px 0;font-size:15px;line-height:1.45;border-top:1px solid var(--line);max-width:none}
+.task:first-child{border-top:0}
+.task small{display:block;color:var(--ink-3);font-size:13px;margin-top:2px}
+.task .st{font:600 11.5px/1 var(--f-body);letter-spacing:.03em;padding:5px 9px;border-radius:99px;justify-self:start;white-space:nowrap}
+.task.done .st{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.task.done > div{color:var(--ink-2)}
+.task.ready .st{background:var(--gold-soft);color:var(--gold)}
+.task.wait .st{background:var(--warn-soft);color:var(--warn)}
+.task.todo .st,.task.later .st{background:var(--tint);color:var(--ink-2)}
+@media (max-width:520px){.task{grid-template-columns:1fr;gap:4px}}
 .side{background:var(--sheet);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .side > header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;justify-content:space-between}
 .side > header h3{margin:0;font-size:16px}
@@ -169,7 +180,7 @@ html{scroll-behavior:smooth}
   <div class="eyebrow">Design · reviewed</div>
   <h1>LHT Lab: an isolated second environment</h1>
   <p class="lede">A separate AWS account, repo and set of users where Matania can change the app freely, without access to the production server. Data and code move between the two environments only by a manual, reversible sync that both sides approve.</p>
-  <div class="meta"><span><b>Owner</b> Eliyahu</span><span><b>LAB owner</b> Matania</span><span><b>Status</b> v2, all questions answered, 10 Oct 2026</span><span><b>Environments</b> <span class="env main">MAIN</span> app.lahatj.com &nbsp;·&nbsp; <span class="env lab">LAB</span> Matania's copy</span></div>
+  <div class="meta"><span><b>Owner</b> Eliyahu</span><span><b>LAB owner</b> Matania</span><span><b>Status</b> v3 · updated 10 Oct 2026 · MAIN preparation done</span><span><b>Environments</b> <span class="env main">MAIN</span> app.lahatj.com &nbsp;·&nbsp; <span class="env lab">LAB</span> Matania's copy</span></div>
 <div class="callout note"><b class="t">Some details are kept off this public page</b><p>Resource names, the AWS account ID and anything security-related are left out on purpose. Eliyahu sends them to Matania privately by email in <b>LHT-Lab-private-notes.md</b>. References like <b>N1</b>–<b>N5</b> on this page point to sections of that file.</p></div>
 </header>
 
@@ -182,7 +193,8 @@ html{scroll-behavior:smooth}
       <ul>
         <li>LAB runs in its own AWS account with its own bill, credentials, users and Cognito pool.</li>
         <li>Nobody from LAB can reach MAIN's server, database or bucket unless MAIN grants it.</li>
-        <li>The catalog syncs both ways. Orders and customers sync from MAIN to LAB only. Conflicts are skipped and reported.</li>
+        <li>Data moves in either direction. A routine catalog sync, and a full sync of all business data (orders, customers, stock) on demand. If LAB ever stops working, everything done there can be brought into MAIN and work continues on MAIN.</li>
+        <li>Conflicts are skipped and reported, never resolved silently.</li>
         <li>Every sync takes a backup first and can be reverted.</li>
         <li>Code moves both ways through simple cherry-picks guided by a local skill.</li>
       </ul>
@@ -247,7 +259,7 @@ html{scroll-behavior:smooth}
   <p class="sub">The design choices. Your answers to the review questions are listed under <a href="#questions">Answered questions</a>.</p>
   <div class="decisions">
     <div class="dec"><span class="id">D1</span><div><b>Two standalone AWS accounts, linked by bucket policies</b><p>Each side grants the other account read access to its exchange bucket with a single bucket-policy statement. A sync only works while both sides keep their statement in place, so it needs both sides' agreement. Removing your statement cuts the link instantly. Every read is logged in CloudTrail.</p></div></div>
-    <div class="dec"><span class="id">D2</span><div><b>Record IDs never collide: LAB numbers start at 1,000,000,000</b><p>Both databases use auto-incrementing integer IDs. After the first copy, LAB moves every ID counter (Postgres sequence) up to 1,000,000,000, so a record's ID means the same thing in both environments. With unique IDs, a merge doesn't need to translate IDs between the two databases. Order numbers get the same treatment through the <code>LAST_ORDER_NUMBER</code> setting, so LAB orders start at 900000.</p></div></div>
+    <div class="dec"><span class="id">D2</span><div><b>Record IDs never collide: LAB numbers start at 1,000,000,000</b><p>Both databases use auto-incrementing integer IDs. After the first copy, LAB moves every ID counter (Postgres sequence) up to 1,000,000,000, so a record's ID means the same thing in both environments. A record created in either environment can therefore move to the other unchanged, with no ID translation. Order numbers get the same treatment through the <code>LAST_ORDER_NUMBER</code> setting, so LAB orders start at 900000 and never clash with MAIN’s.</p></div></div>
     <div class="dec"><span class="id">D3</span><div><b>Three-way merge against the last sync</b><p>Every sync stores a snapshot of the data at sync time. The next sync compares source, target and that baseline, so it can tell "only one side changed this" (apply it) apart from "both sides changed this" (a conflict).</p></div></div>
     <div class="dec"><span class="id">D4</span><div><b>Dry run first, downtime second</b><p>The merge plan and conflict report are generated while both apps are still up. The target goes down only to take the backup and apply the plan you already reviewed.</p></div></div>
     <div class="dec"><span class="id">D5</span><div><b>Matania mirrors the repo into a personal account, not a GitHub fork</b><p>Matania already has read access, and copies the full history with <code>git clone --mirror</code> and <code>git push --mirror</code> into a new private repo. When someone loses access to a private repo, GitHub deletes their forks of it, but a mirror survives. A full-history copy keeps the common ancestor, so cherry-picks work in both directions.</p></div></div>
@@ -258,13 +270,25 @@ html{scroll-behavior:smooth}
 
 <section id="data">
   <h2>Data sync</h2>
-  <p class="sub">There are two sync modes, built in two stages. Full copy works from day one with standard tools. Merge sync is built once there is real divergence to merge.</p>
+  <p class="sub">One sync engine, two profiles, either direction. Eliyahu runs every sync with the <code>/data-sync</code> skill.</p>
 
-  <h3>Mode A: full copy (stage 1)</h3>
-  <p>The target becomes an exact copy of the source: <code>pg_dump</code> → exchange bucket → <code>pg_restore</code>, plus an image sync. The target's own changes since the last sync are lost, so this mode is for the first setup and for resetting LAB. It is simple, reliable and fully reversible from the backup.</p>
+  <h3>Sync profiles</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Profile</th><th>What moves</th><th>Typical use</th></tr></thead>
+    <tbody>
+      <tr><td><b>Catalog</b></td><td>Catalog and images</td><td>Routine. Share new and edited jewelry and collections between MAIN and LAB.</td></tr>
+      <tr><td><b>Full</b></td><td>All business data: catalog, images, customers and users, orders, stock, approvals</td><td><b>MAIN → LAB:</b> refresh LAB with real data.<br><b>LAB → MAIN:</b> bring everything done in LAB into MAIN. This is also the recovery path: if LAB stops working, its orders, customers and stock move to MAIN and work continues there.</td></tr>
+    </tbody>
+  </table></div>
 
-  <h3>Mode B: merge sync (stage 2)</h3>
-  <p>A small CLI in the repo (<code>cmd/lhtsync</code>) exports the synced tables as JSON plus a manifest: source environment, git commit, schema fingerprint, time and row counts. On the target it compares three versions of every record, looked up by ID:</p>
+  <h3>How a sync works</h3>
+  <p>A CLI in the repo, <code>cmd/lhtsync</code>, does three steps:</p>
+  <ol>
+    <li><b>Export</b> writes the profile’s tables as JSON plus a manifest into the source’s exchange bucket. The manifest records the source environment, git commit, schema fingerprint, time and row counts.</li>
+    <li><b>Plan</b> runs on the target while both apps are still up. It compares three versions of every record (source, target, and the baseline saved at the last sync) and writes the conflict report.</li>
+    <li><b>Apply</b> runs inside the maintenance window, in one database transaction.</li>
+  </ol>
+  <p>Records are matched by ID. IDs never collide (D2), so a record created on one side is inserted on the other unchanged.</p>
   <div class="matrix">
     <div><span class="k">changed only in source</span><span class="r ok">Apply</span></div>
     <div><span class="k">changed only in target</span><span class="r n">Keep target</span></div>
@@ -275,6 +299,13 @@ html{scroll-behavior:smooth}
     <div><span class="k">soft-deleted (<code>removed=true</code>)</span><span class="r ok">Sync as a normal change</span></div>
     <div><span class="k">hard-deleted on one side</span><span class="r bad">Reported, not applied</span></div>
   </div>
+  <p>Some data needs specific rules:</p>
+  <ul>
+    <li><b>Stock quantities merge by difference.</b> If MAIN sold 2 of an item and LAB sold 1, the result is 3 fewer, not whichever side wrote last.</li>
+    <li><b>Image addresses are rewritten.</b> The database stores full image URLs, so <code>lhtsync</code> swaps the source bucket address for the target’s, and the image files are copied. Images are only ever added, never deleted.</li>
+    <li><b>Users are matched by email.</b> <code>cognito_id</code> belongs to each environment’s login system and is never copied. A user who exists on both sides under different IDs is linked by email, and their orders follow. Passwords can’t leave Cognito, so an employee new to the target environment gets an invite.</li>
+  </ul>
+  <p>The first MAIN → LAB copy is a plain database restore, since LAB starts empty. Its export becomes the first baseline.</p>
 
   <h3>Conflict handling</h3>
   <p>Each conflict lands in an HTML report. The default is <b>skip and report</b>. You can override it per record or per table:</p>
@@ -283,37 +314,39 @@ html{scroll-behavior:smooth}
     <li><b>source wins</b> / <b>target wins</b> applies to the whole record.</li>
     <li><b>field merge</b> combines the two when the sides changed different fields of the same record, for example price on one side and description on the other.</li>
   </ul>
-  <p>The plan aborts before any downtime when the schema fingerprints don't match on a synced table. Examples are a column one side added, or an enum value the other side doesn't know. Those changes have to be cherry-picked across first, so <b>code sync always comes before data sync.</b></p>
+  <p>The plan aborts before any downtime when the schema fingerprints don’t match on a synced table. Examples are a column one side added, or an enum value the other side doesn’t know. Those changes have to be cherry-picked across first, so <b>code sync always comes before data sync.</b></p>
 
-  <h3>What syncs</h3>
-  <p>Only the catalog flows from LAB back to MAIN, so <b>a merge into MAIN only ever touches catalog tables</b>. Orders created in LAB stay in LAB.</p>
+  <h3>What each profile includes</h3>
   <div class="tablewrap"><table>
-    <thead><tr><th>Data</th><th>Tables</th><th>Direction</th><th>Notes</th></tr></thead>
+    <thead><tr><th>Data</th><th>Tables</th><th>Catalog</th><th>Full</th></tr></thead>
     <tbody>
-      <tr><td>Catalog</td><td><code>jewelry</code>, <code>jewelry_diamond</code>, <code>collection</code>, <code>collection_jewelry</code></td><td><span class="pill p-sync">Both ways</span></td><td>SKU must stay unique. A new SKU created on both sides is a conflict.</td></tr>
-      <tr><td>Images</td><td>S3 bucket</td><td><span class="pill p-sync">Both ways, add only</span></td><td><code>aws s3 sync</code> without <code>--delete</code>, following the catalog. File names are unique, so images are only ever added. The manifest lists every added file so a revert can remove them.</td></tr>
-      <tr><td>Orders</td><td><code>order</code>, <code>order_details</code>, <code>order_message</code></td><td><span class="pill p-map">MAIN → LAB</span></td><td>Order numbers come from separate ranges (D2), so MAIN's orders never overwrite LAB's own test orders.</td></tr>
-      <tr><td>Users and customers</td><td><code>user</code></td><td><span class="pill p-map">MAIN → LAB</span></td><td><code>cognito_id</code> is per environment and never copied. LAB links users by email. Passwords can't leave Cognito, so an employee who needs LAB gets an invite.</td></tr>
-      <tr><td>Approvals and consents</td><td><code>jewelry_approval</code>, <code>collection_approval</code>, <code>customer_setting</code>, <code>consent</code></td><td><span class="pill p-map">MAIN → LAB</span></td><td>Follows users and customers.</td></tr>
-      <tr><td>Live prices and counters</td><td><code>setting</code></td><td><span class="pill p-local">Local</span></td><td>Each side's background job fetches its own prices. Order-number ranges are separate.</td></tr>
-      <tr><td>Everything else</td><td><code>audit_log</code>, <code>notification</code>, <code>invitation</code>, <code>request_access</code>, <code>gold_stock</code></td><td><span class="pill p-local">Local</span></td><td>Never synced. Each environment keeps its own.</td></tr>
+      <tr><td>Catalog</td><td><code>jewelry</code> (products), <code>jewelry_diamond</code>, <code>collection</code>, <code>collection_jewelry</code></td><td><span class="pill p-sync">Yes</span></td><td><span class="pill p-sync">Yes</span></td></tr>
+      <tr><td>Images</td><td>S3 bucket</td><td><span class="pill p-sync">Yes</span></td><td><span class="pill p-sync">Yes</span></td></tr>
+      <tr><td>Customers and users</td><td><code>user</code>, <code>customer_setting</code>, <code>consent</code></td><td><span class="pill p-local">No</span></td><td><span class="pill p-sync">Yes</span></td></tr>
+      <tr><td>Orders</td><td><code>order</code>, <code>order_details</code>, <code>order_message</code></td><td><span class="pill p-local">No</span></td><td><span class="pill p-sync">Yes</span></td></tr>
+      <tr><td>Stock</td><td>stock items (<code>jewelry</code> rows linked to a product, with <code>stock_quantity</code>), <code>gold_stock</code></td><td><span class="pill p-local">No</span></td><td><span class="pill p-sync">Yes</span></td></tr>
+      <tr><td>Approvals</td><td><code>jewelry_approval</code>, <code>collection_approval</code></td><td><span class="pill p-local">No</span></td><td><span class="pill p-sync">Yes</span></td></tr>
+      <tr><td>Environment-only</td><td><code>setting</code> (live prices, order counter), <code>audit_log</code>, <code>notification</code>, <code>invitation</code>, <code>request_access</code></td><td colspan="2"><span class="pill p-local">Never synced</span> Each environment keeps its own.</td></tr>
     </tbody>
   </table></div>
+
+  <h3>When LAB is unavailable</h3>
+  <p>LAB exports a full package to its exchange bucket every night. If LAB’s server or database stops working, Eliyahu runs a full LAB → MAIN sync from the latest nightly package, so it doesn’t need LAB to be running. At most the last day’s work in LAB is at risk, and Matania can still export a fresh package if LAB’s database is reachable.</p>
 </section>
 
 <section id="window">
   <h2>Maintenance window</h2>
-  <p class="sub">Eliyahu runs every sync, on demand, after business hours, with a limit of 60 minutes. It runs on the target side, which is the environment receiving data. The source stays up because <code>pg_dump</code> reads a consistent snapshot. Catalog changes going back to MAIN need a second window on MAIN.</p>
+  <p class="sub">Eliyahu runs every sync with <code>/data-sync</code>, on demand, after business hours, with a limit of 60 minutes. Only the target, the environment receiving data, goes down. The source stays up because the export reads a consistent snapshot. A sync into MAIN takes its window on MAIN.</p>
   <ol class="window">
-    <li><b>Dry run, the day before</b><span>Generate the merge plan and conflict report, resolve conflicts, and freeze the plan. Both apps stay up.</span></li>
+    <li><b>Dry run, the day before</b><span>Export from the source, generate the plan and conflict report, resolve conflicts, and freeze the plan. Both apps stay up.</span></li>
     <li><b>Announce the window</b><span>Message employees with the time and expected length (up to 60 minutes, after business hours).</span></li>
     <li class="down"><b>Switch to maintenance mode <span class="tag-down">app down</span></b><span>Stop the app container and serve a static "under maintenance" page on the same address. <code>/health</code> stays down so nobody mistakes it for the live app.</span></li>
-    <li class="down"><b>Back up <span class="tag-down">app down</span></b><span>Take a manual RDS snapshot, plus a <code>pg_dump</code> into the exchange bucket. Record the backup IDs and the time in the sync log. Image versioning is already on.</span></li>
-    <li class="down"><b>Apply <span class="tag-down">app down</span></b><span>Mode A restores the package. Mode B applies the frozen plan inside one database transaction, so a failure rolls back automatically. Then sync the images.</span></li>
+    <li class="down"><b>Back up <span class="tag-down">app down</span></b><span>Take a <code>pg_dump</code> of the target database (<code>maintenance-window.sh backup</code>) and record it in the sync log. Image versioning is already on.</span></li>
+    <li class="down"><b>Apply <span class="tag-down">app down</span></b><span>Apply the frozen plan inside one database transaction, so a failure rolls back automatically. Then copy the images.</span></li>
     <li class="down"><b>Verify <span class="tag-down">app down</span></b><span>Start the app. Compare row counts against the manifest. Smoke-test: log in, open the catalog, open one synced order, open one image.</span></li>
     <li><b>Reopen, or revert by minute 50</b><span>If everything passes, remove the maintenance page. If anything fails, or verification isn't finished by minute 50, revert so the app is back within the hour.</span></li>
   </ol>
-  <div class="callout note"><b class="t">Revert</b><p>Stop the app, then <code>pg_restore</code> the step-4 dump (or restore the RDS snapshot to a new instance and point the app at it). Delete the image files listed in the manifest, and start the app. A revert after the window reopens also discards whatever employees entered since, so the decision belongs inside the window. Backups are kept for 30 days.</p></div>
+  <div class="callout note"><b class="t">Revert</b><p>Stop the app, <code>pg_restore</code> the step-4 dump, delete the image files listed in the manifest, and start the app. A revert after the window reopens also discards whatever employees entered since, so the decision belongs inside the window. Backups are kept for 30 days.</p></div>
 </section>
 
 <section id="code">
@@ -334,68 +367,83 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
     <li>For each commit, offers to <b>take</b> it (cherry-pick), <b>skip</b> it, or <b>study</b> it (explain it so you can rewrite it your own way).</li>
     <li>Records every decision in <code>docs/PEER_SYNC_LOG.md</code>, so skipped commits aren't offered again.</li>
   </ul>
+  <p><code>/data-sync</code> does the same for data. It checks access and code sync, runs export and plan, shows the conflict report, then drives the window (maintenance page, backup, apply, verify, reopen, or revert) and writes <code>docs/DATA_SYNC_LOG.md</code>.</p>
   <p>Ground rules for both sides: small commits that each do one thing, schema changes in their own commits, and no environment-specific values in code.</p>
 </section>
 
 <section id="eliyahu">
   <h2>Eliyahu’s tasks · MAIN</h2>
-  <p class="sub">Your side, in order. Ticking a box only saves in your own browser.</p>
+  <p class="sub">7 of 16 done. MAIN is ready for LAB. Items marked Ready can start now; the rest wait on Matania or on LAB being live.</p>
   <div class="tasks">
     <div class="side eli">
-      <header><h3>MAIN · app.lahatj.com</h3><span class="progress" id="prog-eli"></span></header>
-      <div class="phase"><h4>Phase 0 · now, urgent</h4>
-        <div class="check"><input type="checkbox" id="e1"><label for="e1">Rotate production credentials before LAB goes live<small>Details in the private notes, section N2.</small></label></div>
-        <div class="check"><input type="checkbox" id="e2"><label for="e2">Confirm the RDS master password is no longer the same as the local one</label></div>
-      </div>
-      <div class="phase"><h4>Phase 1 · prepare the code</h4>
-        <div class="check"><input type="checkbox" id="e3"><label for="e3">Move bucket, image URL prefix, region, domain, CORS/allowed hosts and SES sender to environment variables<small>s3.go, router.go, jewelry/handler.go, email/*, requestaccess/public.go, 3 frontend files</small></label></div>
-        <div class="check"><input type="checkbox" id="e4"><label for="e4">Make the Gemini secret name and the goldapi/apilayer keys configurable, with today's values as defaults</label></div>
-        <div class="check"><input type="checkbox" id="e5a"><label for="e5a">Add the "email employees only" setting (D7), off by default</label></div>
-        <div class="check"><input type="checkbox" id="e5"><label for="e5">Add the maintenance page (static container) and the window script</label></div>
-        <div class="check"><input type="checkbox" id="e6"><label for="e6">Deploy to MAIN and confirm nothing changed</label></div>
-      </div>
-      <div class="phase"><h4>Phase 2 · hand over</h4>
-        <div class="check"><input type="checkbox" id="e8"><label for="e8">Create MAIN’s exchange bucket (private, versioned, 30-day expiry) and grant LAB's account read access</label></div>
-        <div class="check"><input type="checkbox" id="e9"><label for="e9">Grant LAB's account read and list access on MAIN’s images bucket<small>Add a statement to the existing policy; don't replace it. Bucket names in N1.</small></label></div>
-        <div class="check"><input type="checkbox" id="e10"><label for="e10">Export the first package (Mode A) into the exchange bucket</label></div>
-        <div class="check"><input type="checkbox" id="e11"><label for="e11">Add DNS records for <code>lab.lahatj.com</code> and its SES email verification (Matania sends the records)</label></div>
-      </div>
-      <div class="phase"><h4>Phase 3 · ongoing</h4>
-        <div class="check"><input type="checkbox" id="e12"><label for="e12">Build <code>lhtsync</code> merge mode and the <code>/peer-sync</code> skill</label></div>
-      </div>
+      <header><h3>MAIN · app.lahatj.com</h3><span class="progress">7 / 16 done</span></header>
+      <div class="phase"><h4>Phase 0 · credentials</h4>
+      <ul class="tasks-list">
+        <li class="task done"><span class="st">Done</span><div>Rotate production credentials<small>Done on 10 Oct with about 5 s of downtime. Details in the private notes, N2.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Give the local database its own password<small>Production and local no longer share a password.</small></div></li>
+      </ul></div>
+      <div class="phase"><h4>Phase 1 · prepare MAIN</h4>
+      <ul class="tasks-list">
+        <li class="task done"><span class="st">Done</span><div>Move per-environment values into environment variables<small>Bucket, image URL, region, host, Cognito, email sender, Gemini secret name and the goldapi/apilayer keys. MAIN’s values stay the defaults. Listed in <code>internal/envcfg</code>.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Add the “email employees only” setting (D7)<small><code>LHT_EMAIL_EMPLOYEES_ONLY</code>, off on MAIN.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Add the maintenance page and window script<small><code>scripts/maintenance-window.sh</code>: prepare, on, backup, off. A first backup was taken and checked.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Deploy to MAIN and confirm nothing changed<small>Version 1.0.420, about 2 s of downtime. Security headers are identical to before.</small></div></li>
+        <li class="task done"><span class="st">Done</span><div>Clean the server disk and add <code>/cleanup-server</code><small>93% → 13% used.</small></div></li>
+      </ul></div>
+      <div class="phase"><h4>Phase 2 · open the link</h4>
+      <ul class="tasks-list">
+        <li class="task ready"><span class="st">Ready</span><div>Create an admin AWS login for setup work<small>The everyday login can’t create buckets or edit bucket policies.</small></div></li>
+        <li class="task ready"><span class="st">Ready</span><div>Create MAIN’s exchange bucket<small>Private, versioned, 30-day expiry.</small></div></li>
+        <li class="task wait"><span class="st">Waiting on Matania</span><div>Grant LAB’s account read access to the exchange bucket and the images bucket<small>Needs LAB’s AWS account ID. Add statements to the images bucket policy; never replace it. Names in N1.</small></div></li>
+        <li class="task ready"><span class="st">Ready</span><div>Export the first full package<small>Into the exchange bucket, ready for LAB’s first restore.</small></div></li>
+        <li class="task wait"><span class="st">Waiting on Matania</span><div>Add DNS records for <code>lab.lahatj.com</code> and its email verification<small>Needs the records from Matania.</small></div></li>
+      </ul></div>
+      <div class="phase"><h4>Phase 3 · sync tools</h4>
+      <ul class="tasks-list">
+        <li class="task ready"><span class="st">Ready</span><div>Build <code>lhtsync</code><small>Export, plan and apply for both profiles and both directions: three-way merge, stock by difference, image URL rewrite, user matching by email, conflict report.</small></div></li>
+        <li class="task ready"><span class="st">Ready</span><div>Build the <code>/data-sync</code> skill<small>Runs a whole sync, including the maintenance window, backup, revert and sync log.</small></div></li>
+        <li class="task ready"><span class="st">Ready</span><div>Build the <code>/peer-sync</code> skill<small>Code sync by cherry-pick, with a decision log.</small></div></li>
+        <li class="task later"><span class="st">After LAB is live</span><div>Rehearse a full LAB → MAIN sync as a dry run<small>Plan only, no apply. Proves the recovery path works before it’s needed.</small></div></li>
+      </ul></div>
     </div>
   </div>
 </section>
 
 <section id="matania">
   <h2>Matania’s tasks · LAB</h2>
-  <p class="sub">Matania’s side, in order. Phase 1 can start in parallel with your Phase 1. Phase 2 needs your exchange bucket and first package.</p>
+  <p class="sub">Phases 0 and 1 can start now, because MAIN’s preparation is done. Phase 2 needs Eliyahu’s exchange bucket and first package.</p>
   <div class="tasks">
     <div class="side col">
-      <header><h3>LAB · lab.lahatj.com</h3><span class="progress" id="prog-col"></span></header>
+      <header><h3>LAB · lab.lahatj.com</h3><span class="progress">0 / 17 done</span></header>
       <div class="phase"><h4>Phase 0 · account</h4>
-        <div class="check"><input type="checkbox" id="c1"><label for="c1">Create the AWS account with MFA on the root login, plus a budget alarm</label></div>
-        <div class="check"><input type="checkbox" id="c2"><label for="c2">Create a personal IAM user with MFA; nobody uses root day to day<small>Only Matania gets AWS and database access. Other LAB users use the app only.</small></label></div>
-        <div class="check"><input type="checkbox" id="c3"><label for="c3">Mirror Eliyahu's repo into a new private repo in Matania’s own account<small><code>git clone --mirror</code>, then <code>git push --mirror</code>. Not a GitHub fork.</small></label></div>
-      </div>
+      <ul class="tasks-list">
+        <li class="task todo"><span class="st">To do</span><div>Create the AWS account with MFA on the root login, plus a budget alarm</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Create a personal IAM user with MFA; nobody uses root day to day<small>Only Matania gets AWS and database access. Other LAB users use the app only.</small></div></li>
+        <li class="task todo"><span class="st">To do</span><div>Mirror Eliyahu’s repo into a new private repo in Matania’s own account<small><code>git clone --mirror</code>, then <code>git push --mirror</code>. Not a GitHub fork.</small></div></li>
+        <li class="task todo"><span class="st">To do</span><div>Send Eliyahu the LAB AWS account ID<small>Needed for the read grants.</small></div></li>
+      </ul></div>
       <div class="phase"><h4>Phase 1 · infrastructure (eu-west-1)</h4>
-        <div class="check"><input type="checkbox" id="c4"><label for="c4">RDS Postgres 16, not publicly accessible, with a dedicated app user that isn't the master user</label></div>
-        <div class="check"><input type="checkbox" id="c5"><label for="c5">S3 images bucket with versioning on, and LAB’s exchange bucket with read access for MAIN (MAIN’s account ID in N1)</label></div>
-        <div class="check"><input type="checkbox" id="c6"><label for="c6">Cognito user pool and app client</label></div>
-        <div class="check"><input type="checkbox" id="c7"><label for="c7">EC2 with Docker, same as MAIN: a restart policy, a security group limited to known IPs, and a TLS certificate for <code>lab.lahatj.com</code></label></div>
-        <div class="check"><input type="checkbox" id="c8"><label for="c8">Secrets Manager entry for Gemini, Bedrock model access, CloudWatch log group, SES</label></div>
-        <div class="check"><input type="checkbox" id="c9"><label for="c9">Own Docker registry (ECR or Docker Hub), and Matania’s own Gemini, goldapi and apilayer keys</label></div>
-        <div class="check"><input type="checkbox" id="c9a"><label for="c9a">Turn on "email employees only" and send Eliyahu the DNS records for the domain and SES</label></div>
-      </div>
+      <ul class="tasks-list">
+        <li class="task todo"><span class="st">To do</span><div>RDS Postgres 16, not publicly accessible, with a dedicated app user that isn’t the master user</div></li>
+        <li class="task todo"><span class="st">To do</span><div>S3 images bucket with versioning on, and LAB’s exchange bucket with read access for MAIN</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Cognito user pool and app client</div></li>
+        <li class="task todo"><span class="st">To do</span><div>EC2 with Docker, same as MAIN: a restart policy, a security group limited to known IPs, and a TLS certificate for <code>lab.lahatj.com</code></div></li>
+        <li class="task todo"><span class="st">To do</span><div>Secrets Manager entry for Gemini, Bedrock model access, CloudWatch log group, SES</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Own Docker registry (ECR or Docker Hub), and Matania’s own Gemini, goldapi and apilayer keys</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Set LAB’s environment values and send Eliyahu the DNS records<small>Every value is listed in <code>internal/envcfg/envcfg.go</code>; include <code>LHT_EMAIL_EMPLOYEES_ONLY=TRUE</code>. Frontend: <code>VITE_IMAGE_URL_PREFIX</code>.</small></div></li>
+      </ul></div>
       <div class="phase"><h4>Phase 2 · first data</h4>
-        <div class="check"><input type="checkbox" id="c10"><label for="c10">Restore Eliyahu's first package and sync the images from MAIN’s images bucket</label></div>
-        <div class="check"><input type="checkbox" id="c11"><label for="c11">Move ID counters to 1,000,000,000 and LAST_ORDER_NUMBER to 900000</label></div>
-        <div class="check"><input type="checkbox" id="c12"><label for="c12">Clear every <code>cognito_id</code>, then invite LAB users by email</label></div>
-        <div class="check"><input type="checkbox" id="c13"><label for="c13">Deploy, run the smoke test, then save the package as the first sync baseline</label></div>
-      </div>
+      <ul class="tasks-list">
+        <li class="task todo"><span class="st">To do</span><div>Restore Eliyahu’s first full package and copy the images<small>Image addresses are rewritten to LAB’s bucket as part of the restore.</small></div></li>
+        <li class="task todo"><span class="st">To do</span><div>Move ID counters to 1,000,000,000 and LAST_ORDER_NUMBER to 900000</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Clear every <code>cognito_id</code>, then invite LAB users by email</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Deploy, run the smoke test, and keep the package as the first sync baseline</div></li>
+        <li class="task todo"><span class="st">To do</span><div>Schedule a nightly full export to LAB’s exchange bucket<small>This is what lets MAIN take over LAB’s work if LAB stops working.</small></div></li>
+      </ul></div>
       <div class="phase"><h4>Phase 3 · ongoing</h4>
-        <div class="check"><input type="checkbox" id="c14"><label for="c14">Cherry-pick Eliyahu's configuration commit (D6) first, then use <code>/peer-sync</code> for everything after</label></div>
-      </div>
+      <ul class="tasks-list">
+        <li class="task todo"><span class="st">To do</span><div>Use <code>/peer-sync</code> for code changes in both directions</div></li>
+      </ul></div>
     </div>
   </div>
 </section>
@@ -407,15 +455,15 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
     <thead><tr><th>#</th><th>Topic</th><th>Answer</th></tr></thead>
     <tbody>
       <tr><td class="mono">Q1</td><td>Conflict default</td><td>Skip and report. Nothing changes silently.</td></tr>
-      <tr><td class="mono">Q2</td><td>What syncs</td><td>Catalog and images both ways. Orders, customers and approvals MAIN → LAB only.</td></tr>
+      <tr><td class="mono">Q2</td><td>What syncs</td><td>Catalog sync both ways as routine. Full sync (orders, customers, stock and approvals too) in either direction on demand, including LAB → MAIN if LAB stops working.</td></tr>
       <tr><td class="mono">Q3</td><td>LAB domain</td><td>lab.lahatj.com. Eliyahu adds the DNS records.</td></tr>
       <tr><td class="mono">Q4</td><td>LAB emails</td><td>Employees only. Customers never get mail from LAB.</td></tr>
       <tr><td class="mono">Q5</td><td>LAB image access</td><td>Same access model as MAIN (details in N3).</td></tr>
       <tr><td class="mono">Q6</td><td>API keys</td><td>Matania's own Gemini, goldapi and apilayer keys.</td></tr>
       <tr><td class="mono">Q7</td><td>Hosting</td><td>Same setup as MAIN: EC2 + Docker.</td></tr>
-      <tr><td class="mono">Q8</td><td>Other tables</td><td>Audit log, notifications, invitations, access requests and gold stock all stay local.</td></tr>
+      <tr><td class="mono">Q8</td><td>Other tables</td><td>Audit log, notifications, invitations, access requests and settings stay in each environment. Gold stock is part of the full sync.</td></tr>
       <tr><td class="mono">Q9</td><td>Sync cadence</td><td>On demand, run by Eliyahu.</td></tr>
-      <tr><td class="mono">Q10</td><td>Git history</td><td>Matania already has read access to the full history. Eliyahu handles the related credential work in Phase 0 (N2).</td></tr>
+      <tr><td class="mono">Q10</td><td>Git history</td><td>Matania already has read access to the full history (see N2).</td></tr>
       <tr><td class="mono">Q11</td><td>Customer data access</td><td>Matania only. Other LAB users use the app, with no AWS or database access.</td></tr>
       <tr><td class="mono">Q12</td><td>Maintenance window</td><td>Up to 60 minutes after business hours. Revert decision by minute 50.</td></tr>
       <tr><td class="mono">Q13</td><td>LAB repo</td><td>Matania mirrors the repo into a personal private repo, not a GitHub fork.</td></tr>
@@ -426,10 +474,10 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
 <section id="risks">
   <h2>Risks</h2>
   <div class="risks">
-    <div class="risk"><span class="sev h">High</span><div><b>Credentials must be rotated before LAB goes live</b><p>Fix: Eliyahu’s Phase 0 (details in N2).</p></div></div>
-    <div class="risk"><span class="sev h">High</span><div><b>Automatic schema migration drops columns</b><p>Ent runs <code>WithDropColumn(true)</code>, so a restore or cherry-pick from the other side can silently drop a column the receiving side still uses. Fix: the schema check aborts the plan; consider versioned migrations before stage 2.</p></div></div>
+    <div class="risk"><span class="sev h">High</span><div><b>Automatic schema migration drops columns</b><p>Ent runs <code>WithDropColumn(true)</code>, so a restore or cherry-pick from the other side can silently drop a column the receiving side still uses. Fix: the schema check aborts the plan; consider versioned migrations before the first merge.</p></div></div>
+    <div class="risk"><span class="sev m">Medium</span><div><b>Recovery is only as fresh as LAB’s last export</b><p>If LAB fails, work since its last nightly package is at risk. Fix: the nightly export, and a dry-run rehearsal of LAB → MAIN.</p></div></div>
     <div class="risk"><span class="sev m">Medium</span><div><b>Replacing MAIN’s images bucket policy breaks every image</b><p>The existing policy is what the live site depends on. Fix: add a statement, never paste over the policy; review it in the console.</p></div></div>
-    <div class="risk"><span class="sev m">Medium</span><div><b>A late revert loses employees' work</b><p>Fix: verify inside the window, keep the window short, and announce it.</p></div></div>
+    <div class="risk"><span class="sev m">Medium</span><div><b>A late revert loses employees’ work</b><p>Fix: verify inside the window, keep the window short, and announce it.</p></div></div>
     <div class="risk"><span class="sev m">Medium</span><div><b>Customers receive emails from both environments</b><p>Fix: LAB emails employees only (D7).</p></div></div>
   </div>
 </section>
@@ -438,27 +486,7 @@ git cherry-pick -x &lt;sha&gt;                        # -x records the source co
 </main>
 </div>
 
-<script>
-(function(){
-  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-  function prog(){
-    [['eli','.side.eli'],['col','.side.col']].forEach(([id,sel])=>{
-      const boxes=[...document.querySelectorAll(sel+' input[type=checkbox]')];
-      const done=boxes.filter(b=>b.checked).length;
-      document.getElementById('prog-'+id).textContent=done+' / '+boxes.length;
-    });
-  }
-  document.querySelectorAll('.check input').forEach(b=>{
-    b.checked=store.get('lab-'+b.id)==='1';
-    b.addEventListener('change',()=>{store.set('lab-'+b.id,b.checked?'1':'0');prog();});
-  });
-  document.querySelectorAll('.q textarea').forEach(t=>{
-    t.value=store.get('lab-'+t.id)||'';
-    t.addEventListener('input',()=>store.set('lab-'+t.id,t.value));
-  });
-  prog();
-})();
-</script>
+
 
 </body>
 </html>
